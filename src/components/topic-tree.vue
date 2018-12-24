@@ -15,10 +15,6 @@ export default {
   name: 'topic-tree',
   props: ['data'],
   data: () => ({
-    root: [],
-    nodes: [],
-    tree: null,
-    zoom: null,
     center: { x: 0, y: 0 },
     parentRadius: 40,
     childRadius: 20,
@@ -26,7 +22,8 @@ export default {
     distanceRatio: 2,
     between: 50,
     duration: 200,
-    counter: 0
+    circleColor: '#8ee000',
+    lineColor: '#e0ddd5'
   }),
   mounted () {
     this.initialize()
@@ -58,6 +55,8 @@ export default {
         .attr('class', 'content')
         .attr('transform', `translate(${this.center.x}, ${this.center.y})`)
         .attr('cursor', 'pointer')
+      this.linksTag = this.panel.append('g').attr('class', 'links')
+      this.circlesTag = this.panel.append('g').attr('class', 'circles')
 
       this.zoom = d3.zoom().scaleExtent([0.5, 3]).on('zoom', function () {
         that.panel.attr('transform', d3.event.transform)
@@ -72,7 +71,7 @@ export default {
       const that = this
       const treeData = this.tree(source)
       this.nodes = treeData.descendants()
-      // const links = treeData.descendants().slice(1)
+      const links = treeData.descendants()
       this.nodes.forEach(function (d) {
         if (d.children && d.children.length) {
           let angle = 360 / d.children.length
@@ -84,27 +83,32 @@ export default {
         }
       })
 
-      const node = this.panel.selectAll('g.node')
+      const link = this.linksTag.selectAll('g')
+        .data(links, function (d) {
+          return d
+        })
+
+      const node = this.circlesTag.selectAll('g')
         .data(that.nodes, function (d) {
           return d.id || (d.id = ++that.counter)
         })
 
-      // this.drawLink(links)
       isFirst ? this.drawCircle(node) : this.drawMergedCircle(node)
+      isFirst ? this.drawLink(link) : this.drawMergedLink(link)
     },
     // draw the circle
     drawCircle (node) {
       const that = this
-      const nodeEnter = node.enter().append('g')
-        .attr('class', 'circle')
+      const nodeEnter = node.enter()
 
       nodeEnter.append('circle')
-        .attr('class', 'circle')
+        .attr('class', (d) => (d.data.hasChild ? 'hasChild' : ''))
         .attr('r', (d) => ((d.data.isParent) ? that.parentRadius : that.childRadius))
-        .style('fill', (d) => (d.data.hasChild ? '#8ee000' : '#f0f'))
         .on('click', function (d) {
-          d.data.isParent = true
-          return that.nodeClick(d, this)
+          if (d.data.hasChild) {
+            d.data.isParent = true
+            return that.nodeClick(d, this)
+          }
         })
         .transition()
         .delay((d, i) => (i * that.duration))
@@ -122,8 +126,7 @@ export default {
     },
     drawMergedCircle (node) {
       const that = this
-      const nodeEnter = node.enter().append('g')
-        .attr('class', 'circle')
+      const nodeEnter = node.enter()
 
       const nodeUpdate = nodeEnter.merge(node)
       const radio = 360 / nodeUpdate._groups[0].length
@@ -131,15 +134,18 @@ export default {
       let originalPosition = { x: 0, y: 0 }
 
       nodeUpdate.append('circle')
-        .attr('class', 'circle')
+        .attr('class', (d) => (d.data.hasChild ? 'hasChild' : ''))
         .on('click', function (d) {
-          d.data.isParent = true
-          return that.nodeClick(d, this)
+          if (d.data.hasChild) {
+            d.data.isParent = true
+            return that.nodeClick(d, this)
+          }
         })
-        .style('fill', (d) => (d.data.hasChild ? '#8ee000' : '#f0f'))
         .attr('r', that.childRadius)
+        .style('opacity', 0)
         .attr('cx', function (d, i) {
           if (i < 1) {
+            d.isShown = true
             d.data.isParent = true
             angle = d.data.angle
             d.data.sx = d.data.cx
@@ -162,9 +168,11 @@ export default {
           }
           return d.data.sy
         })
+        .style('opacity', (d) => (d.isShown ? 1 : 0))
         .transition()
-        .delay((d, i) => (i * that.duration))
+        .delay((d, i) => (3 * i * that.duration))
         .duration(6 * that.duration)
+        .style('opacity', 1)
         .attr('cx', function (d, i) {
           if (i < 1) {
             angle = d.data.angle + 180
@@ -219,31 +227,44 @@ export default {
           d3.select('svg').call(that.zoom.transform, transform)
         })
     },
-    drawLink (links) {
+    drawLink (link) {
       const that = this
+      const lineEnter = link.enter()
+        .append('line')
 
-      this.panel.selectAll('line')
-        .data(links, function (d) {
-          return d
-        })
-        .enter().append('line')
-        .style('fill', (d) => (d.data.hasChild ? '#8ee000' : '#f0f'))
-        .transition()
+      lineEnter.transition()
         .delay((d, i) => (i * that.duration))
-        .duration(5 * that.duration)
-        .attr('class', 'line')
-        .attr('stroke', '#e0ddd5')
-        .attr('stroke-width', '2px')
+        .duration(3 * that.duration)
         .attr('x1', 0)
         .attr('y1', 0)
         .attr('x2', function (d) {
-          const angle = (d.data.angle / 180) * Math.PI
-          return that.distance * Math.sin(angle)
-        })
-        .attr('y2', function (d) {
+          if (d.data.angle === null) return 0
           const angle = (d.data.angle / 180) * Math.PI
           return that.distance * Math.cos(angle)
         })
+        .attr('y2', function (d) {
+          if (d.data.angle === null) return 0
+          const angle = (d.data.angle / 180) * Math.PI
+          return that.distance * Math.sin(angle)
+        })
+    },
+    drawMergedLink (link) {
+      const that = this
+      const lineEnter = link.enter().append('line')
+      const lineUpdate = lineEnter.merge(link)
+
+      lineUpdate
+        .attr('x1', (d) => (d.data.sx))
+        .attr('y1', (d) => (d.data.sy))
+        .attr('x2', (d) => (d.data.sx))
+        .attr('y2', (d) => (d.data.sy))
+        .transition()
+        .delay((d, i) => (3 * i * that.duration))
+        .duration(6 * that.duration)
+        .attr('x1', (d) => (d.data.sx))
+        .attr('y1', (d) => (d.data.sy))
+        .attr('x2', (d) => (d.data.cx))
+        .attr('y2', (d) => (d.data.cy))
     }
   }
 }
@@ -274,5 +295,20 @@ svg {
     cursor: pointer;
     margin: 10px;
   }
+}
+</style>
+
+<style lang="scss">
+circle {
+  fill: #ff00ff;
+}
+
+.hasChild {
+  fill: #8ee000;
+}
+
+line {
+  stroke: #e0ddd5;
+  stroke-width: 2px;
 }
 </style>
