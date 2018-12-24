@@ -22,6 +22,7 @@ export default {
     distanceRatio: 2,
     between: 50,
     duration: 200,
+    counter: 0,
     circleColor: '#8ee000',
     lineColor: '#e0ddd5'
   }),
@@ -57,6 +58,7 @@ export default {
         .attr('cursor', 'pointer')
       this.linksTag = this.panel.append('g').attr('class', 'links')
       this.circlesTag = this.panel.append('g').attr('class', 'circles')
+      this.titlesTag = this.panel.append('g').attr('class', 'titles')
 
       this.zoom = d3.zoom().scaleExtent([0.5, 3]).on('zoom', function () {
         that.panel.attr('transform', d3.event.transform)
@@ -93,8 +95,14 @@ export default {
           return d.id || (d.id = ++that.counter)
         })
 
+      const title = this.titlesTag.selectAll('g')
+        .data(that.nodes, function (d) {
+          return d.id || (d.id = ++that.counter)
+        })
+
       isFirst ? this.drawCircle(node) : this.drawMergedCircle(node)
       isFirst ? this.drawLink(link) : this.drawMergedLink(link)
+      isFirst ? this.drawText(title) : this.drawMergedText(title)
     },
     // draw the circle
     drawCircle (node) {
@@ -102,10 +110,10 @@ export default {
       const nodeEnter = node.enter()
 
       nodeEnter.append('circle')
-        .attr('class', (d) => (d.data.hasChild ? 'hasChild' : ''))
+        .attr('class', (d) => (d.data.hasChild && d.data.isParent === false ? 'hasChild' : ''))
         .attr('r', (d) => ((d.data.isParent) ? that.parentRadius : that.childRadius))
         .on('click', function (d) {
-          if (d.data.hasChild) {
+          if (d.data.hasChild && d.data.isParent === false) {
             d.data.isParent = true
             return that.nodeClick(d, this)
           }
@@ -134,7 +142,7 @@ export default {
       let originalPosition = { x: 0, y: 0 }
 
       nodeUpdate.append('circle')
-        .attr('class', (d) => (d.data.hasChild ? 'hasChild' : ''))
+        .attr('class', (d) => (d.data.hasChild && d.data.isParent === false ? 'hasChild' : ''))
         .on('click', function (d) {
           if (d.data.hasChild) {
             d.data.isParent = true
@@ -209,6 +217,7 @@ export default {
       }
 
       d3.select(ele).remove()
+      d3.select('#text-' + d.id).remove()
       this.update(d, false)
       d.data.isParent = false
 
@@ -265,6 +274,58 @@ export default {
         .attr('y1', (d) => (d.data.sy))
         .attr('x2', (d) => (d.data.cx))
         .attr('y2', (d) => (d.data.cy))
+    },
+    drawText (text) {
+      const that = this
+      const textEnter = text.enter().append('text')
+        .attr('id', d => ('text-' + d.id))
+        .html(d => d.data.name)
+
+      textEnter
+        .transition()
+        .delay((d, i) => (i * that.duration))
+        .duration(3 * that.duration)
+        .style('opacity', '1')
+        .attr('transform', function (d) {
+          if (d.data.angle === null) {
+            return `translate(0, 55)`
+          } else {
+            const angle = (d.data.angle / 180) * Math.PI
+            const delta = (d.data.isParent ? that.parentRadius : that.childRadius) + 20
+            const x = that.distance * Math.cos(angle)
+            const y = that.distance * Math.sin(angle) > 0
+              ? that.distance * Math.sin(angle) + delta : that.distance * Math.sin(angle) - delta
+            return `translate(${x},${y})`
+          }
+        })
+    },
+    drawMergedText (text) {
+      const that = this
+      const textEnter = text.enter().append('text')
+        .attr('id', d => ('text-' + d.id))
+        .html(d => d.data.name)
+      const textUpdate = textEnter.merge(text)
+
+      textUpdate
+        .attr('transform', function (d) {
+          const delta = that.childRadius + 20
+          const x = d.data.sx
+          const y = d.data.sy > 0
+            ? d.data.sy + delta : d.data.sy - delta
+          return `translate(${x},${y})`
+        })
+        .style('opacity', (d) => (d.isShown ? 1 : 0))
+        .transition()
+        .delay((d, i) => (3 * i * that.duration))
+        .duration(6 * that.duration)
+        .style('opacity', 1)
+        .attr('transform', function (d) {
+          const delta = (d.data.isParent ? that.parentRadius : that.childRadius) + 20
+          const x = d.data.cx
+          const y = d.data.cy > 0
+            ? d.data.cy + delta : d.data.cy - delta
+          return `translate(${x},${y})`
+        })
     }
   }
 }
@@ -300,15 +361,22 @@ svg {
 
 <style lang="scss">
 circle {
-  fill: #ff00ff;
+  fill: #8ee000;
+  cursor: default;
 }
 
 .hasChild {
-  fill: #8ee000;
+  stroke: red;
+  cursor: pointer;
 }
 
 line {
   stroke: #e0ddd5;
   stroke-width: 2px;
+}
+
+text {
+  text-anchor: middle;
+  opacity: 0;
 }
 </style>
