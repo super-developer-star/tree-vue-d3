@@ -214,9 +214,10 @@ export default {
 
           return `translate(${that.center.x}, ${that.center.y})`
         })
-
-      const transform = d3.zoomIdentity.translate(that.center.x, that.center.y).scale(1)
-      d3.select('svg').call(that.zoom.transform, transform)
+        .on('end', () => {
+          const transform = d3.zoomIdentity.translate(that.center.x, that.center.y).scale(1)
+          d3.select('svg').call(that.zoom.transform, transform)
+        })
     },
     drawLink (links) {
       const that = this
