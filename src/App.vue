@@ -1,9 +1,6 @@
 <template>
   <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link>
-    </div>
-    <router-view/>
+    <topic-tree :data="treeData"></topic-tree>
   </div>
 </template>
 
@@ -15,14 +12,170 @@
   text-align: center;
   color: #2c3e50;
 }
-#nav {
-  padding: 30px;
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-    &.router-link-exact-active {
-      color: #42b983;
-    }
-  }
+
+body {
+  margin: 0;
 }
 </style>
+<script>
+import TopicTree from './components/topic-tree'
+
+export default {
+  components: { TopicTree },
+  data: () => ({
+    treeData: {
+      name: 'Science',
+      angle: null,
+      cx: 0,
+      cy: 0,
+      isParent: true,
+      hasChild: true,
+      children: [
+        {
+          name: 'Physics',
+          angle: null,
+          cx: 0,
+          cy: 0,
+          isParent: false,
+          hasChild: true,
+          children: [
+            {
+              name: 'Linear Motion 1',
+              angle: null,
+              cx: 0,
+              cy: 0,
+              isParent: false,
+              hasChild: true,
+              children: [
+                {
+                  name: 'motion',
+                  angle: null,
+                  cx: 0,
+                  cy: 0,
+                  isParent: false,
+                  hasChild: true,
+                  children: [
+                    {
+                      name: 'color1',
+                      angle: null,
+                      cx: 0,
+                      cy: 0,
+                      isParent: false,
+                      hasChild: false
+                    }
+                  ]
+                },
+                {
+                  name: 'SUB-CATEGORY',
+                  angle: null,
+                  cx: 0,
+                  cy: 0,
+                  isParent: false,
+                  hasChild: true,
+                  children: [
+                    {
+                      name: 'color',
+                      angle: null,
+                      cx: 0,
+                      cy: 0,
+                      isParent: false,
+                      hasChild: false
+                    }
+                  ]
+                }]
+            },
+            {
+              name: 'Linear motion 2',
+              angle: null,
+              cx: 0,
+              cy: 0,
+              isParent: false,
+              hasChild: false
+            },
+            {
+              name: 'Linear motion 3',
+              angle: null,
+              cx: 0,
+              cy: 0,
+              isParent: false,
+              hasChild: false
+            }
+          ]
+        },
+        {
+          name: 'Chemistry',
+          angle: null,
+          cx: 0,
+          cy: 0,
+          isParent: false,
+          hasChild: false
+        },
+        {
+          name: 'Physical Science',
+          angle: null,
+          cx: 0,
+          cy: 0,
+          isParent: false,
+          hasChild: false
+        },
+        {
+          name: 'Biology',
+          angle: null,
+          cx: 0,
+          cy: 0,
+          isParent: false,
+          hasChild: false
+        },
+        {
+          name: 'Anatomy',
+          angle: null,
+          cx: 0,
+          cy: 0,
+          isParent: false,
+          hasChild: false
+        },
+        {
+          name: 'Physiology',
+          angle: null,
+          cx: 0,
+          cy: 0,
+          isParent: false,
+          hasChild: false
+        },
+        {
+          name: 'Zoology',
+          angle: null,
+          cx: 0,
+          cy: 0,
+          isParent: false,
+          hasChild: false
+        },
+        {
+          name: 'Science',
+          angle: null,
+          cx: 0,
+          cy: 0,
+          isParent: false,
+          hasChild: false
+        },
+        {
+          name: 'Physics - Intermediate',
+          angle: null,
+          cx: 0,
+          cy: 0,
+          isParent: false,
+          hasChild: false
+        },
+        {
+          name: 'Biology',
+          angle: null,
+          cx: 0,
+          cy: 0,
+          isParent: false,
+          hasChild: false
+        }
+      ]
+    }
+  })
+}
+</script>
