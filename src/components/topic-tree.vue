@@ -79,7 +79,7 @@ export default {
           let angle = 360 / d.children.length
           if (d.depth < 1) {
             d.children.forEach(function (ch, i) {
-              ch.data.angle = 360 - angle * (i + 1)
+              ch.data.angle = angle * (i + 1)
             })
           }
         }
@@ -186,7 +186,7 @@ export default {
             angle = d.data.angle + 180
             d.data.cx = (that.distance + that.between) * Math.cos((d.data.angle / 180) * Math.PI) + d.data.sx
           } else {
-            angle = angle - radio
+            angle = angle + radio
             d.data.cx = that.distance * Math.cos((angle / 180) * Math.PI) + d.data.sx
           }
           return d.data.cx
@@ -196,7 +196,7 @@ export default {
             angle = d.data.angle + 180
             d.data.cy = (that.distance + that.between) * Math.sin((d.data.angle / 180) * Math.PI) + d.data.sy
           } else {
-            angle = angle - radio
+            angle = angle + radio
             d.data.angle = angle
             d.data.cy = that.distance * Math.sin((d.data.angle / 180) * Math.PI) + d.data.sy
           }
