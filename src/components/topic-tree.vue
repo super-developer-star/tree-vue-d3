@@ -1,10 +1,10 @@
 <template>
   <div id="diagram">
     <svg></svg>
-    <div class="buttons">
-      <i class="material-icons">add</i>
-      <i class="material-icons">remove</i>
-    </div>
+    <!--<div class="buttons">-->
+      <!--<i class="material-icons">add</i>-->
+      <!--<i class="material-icons">remove</i>-->
+    <!--</div>-->
   </div>
 </template>
 
@@ -100,12 +100,12 @@ export default {
           return d.id || (d.id = ++that.counter)
         })
 
-      isFirst ? this.drawCircle(node, isTrans) : this.drawMergedCircle(node, isTrans)
-      // isFirst ? this.drawLink(link) : this.drawMergedLink(link)
-      // isFirst ? this.drawText(title) : this.drawMergedText(title)
+      isFirst ? this.drawCircle(node) : this.drawMergedCircle(node, isTrans)
+      isFirst ? this.drawLink(link) : this.drawMergedLink(link, isTrans)
+      isFirst ? this.drawText(title, isTrans) : this.drawMergedText(title, isTrans)
     },
     // draw the circle
-    drawCircle (node, isTrans) {
+    drawCircle (node) {
       const that = this
       const nodeEnter = node.enter()
 
@@ -120,8 +120,8 @@ export default {
           }
         })
         .transition()
-        .delay((d, i) => (isTrans ? i * that.duration : 0))
-        .duration(isTrans ? 3 * that.duration : 0)
+        .delay((d, i) => (i * that.duration))
+        .duration(3 * that.duration)
         .attr('cx', d => {
           d.data.sx = 0
           d.data.cx = d.data.angle === null ? 0 : that.distance * Math.cos((d.data.angle / 180) * Math.PI)
@@ -132,6 +132,17 @@ export default {
           d.data.cy = d.data.angle === null ? 0 : that.distance * Math.sin((d.data.angle / 180) * Math.PI)
           return d.data.cy
         })
+    },
+    isClickable (d) {
+      let isClickable = true
+      d.children.forEach(function (v) {
+        if (v.children !== undefined && v.children !== null) {
+          isClickable = false
+          return false
+        }
+      })
+
+      return isClickable
     },
     drawMergedCircle (node, isTrans) {
       const that = this
@@ -147,28 +158,35 @@ export default {
         .attr('class', (d) => (d.data.hasChild && d.data.isParent === false ? 'hasChild' : ''))
         .on('click', function (d) {
           if (d.data.isParent) {
-            if (d.data.isClickable) {
+            if (that.isClickable(d)) {
               that.nodeCollapse(d, this)
             } else {
+              console.log('no clickable')
               return false
             }
           } else {
             if (d.data.hasChild) {
+              console.log('clickable!')
+
               d.data.isParent = true
-              d.parent.parent.data.isClickable = false
               that.nodeClick(d, this)
             }
           }
         })
         .attr('r', that.childRadius)
-        .style('opacity', 0)
+        .style('opacity', (d) => (d.isShown ? 1 : 0))
         .attr('cx', function (d, i) {
           if (i < 1) {
-            d.isShown = true
-            d.data.isParent = true
-            angle = d.data.angle
-            d.data.sx = d.data.cx
-            originalPosition.x = d.data.cx
+            if (!isTrans) {
+              d.data.sx = d.parent.data.cx
+              d.isShown = false
+              return d.data.cx
+            } else {
+              d.isShown = true
+              angle = d.data.angle
+              d.data.sx = d.data.cx
+              originalPosition.x = d.data.cx
+            }
           } else {
             d.data.cx = (that.distance + that.between) * Math.cos((angle / 180) * Math.PI) + originalPosition.x
             d.data.sx = (that.distance + that.between) * Math.cos((angle / 180) * Math.PI) + originalPosition.x
@@ -177,16 +195,20 @@ export default {
         })
         .attr('cy', function (d, i) {
           if (i < 1) {
-            angle = d.data.angle
-            d.data.sy = d.data.cy
-            originalPosition.y = d.data.cy
+            if (!isTrans) {
+              d.data.sy = d.parent.data.cy
+              return d.data.cy
+            } else {
+              angle = d.data.angle
+              d.data.sy = d.data.cy
+              originalPosition.y = d.data.cy
+            }
           } else {
             d.data.cy = (that.distance + that.between) * Math.sin((angle / 180) * Math.PI) + originalPosition.y
             d.data.sy = (that.distance + that.between) * Math.sin((angle / 180) * Math.PI) + originalPosition.y
           }
           return d.data.sy
         })
-        .style('opacity', (d) => (d.isShown ? 1 : 0))
 
       if (isTrans) {
         nodeUdateEle
@@ -231,33 +253,47 @@ export default {
       }
 
       d3.select(ele).remove()
+      d3.select('#line-' + d.id).remove()
       d3.select('#text-' + d.id).remove()
+      d.isShown = true
       this.update(d, false, true)
-      d.data.isParent = false
-      d.data.isClickable = true
-      d.parent.data.isClickable = false
-
+      d3.select('#circle-' + d.id).attr('class', 'isClickable')
+      d3.select('#circle-' + d.parent.id).attr('class', '')
       // Move the diagram
-      // d3.select('.content')
-      //   .transition()
-      //   .duration(3 * that.duration)
-      //   .attr('transform', function () {
-      //     that.center.x = that.center.x - (2 * that.distance + that.between) * Math.cos((d.data.angle / 180) * Math.PI)
-      //     that.center.y = that.center.y - (2 * that.distance + that.between) * Math.sin((d.data.angle / 180) * Math.PI)
-      //
-      //     return `translate(${that.center.x}, ${that.center.y})`
-      //   })
-      //   .on('end', () => {
-      //     const transform = d3.zoomIdentity.translate(that.center.x, that.center.y).scale(1)
-      //     d3.select('svg').call(that.zoom.transform, transform)
-      //   })
+      d3.select('.content')
+        .transition()
+        .duration(3 * that.duration)
+        .attr('transform', function () {
+          that.center.x = that.center.x - (2 * that.distance + that.between) * Math.cos((d.data.angle / 180) * Math.PI)
+          that.center.y = that.center.y - (2 * that.distance + that.between) * Math.sin((d.data.angle / 180) * Math.PI)
+
+          return `translate(${that.center.x}, ${that.center.y})`
+        })
+        .on('end', () => {
+          const transform = d3.zoomIdentity.translate(that.center.x, that.center.y).scale(1)
+          d3.select('svg').call(that.zoom.transform, transform)
+        })
     },
     nodeCollapse (d, ele) {
-      console.log('collapsed!')
-      // const that = this
-      // d.data.isParent = false
-      //
-      // that.drawRemove(d)
+      const that = this
+      this.drawRemove(d)
+
+      console.log(d.children.length)
+      d3.select('.content')
+        .transition()
+        .delay(3 * d.children.length * that.duration)
+        .duration(6 * that.duration)
+        .attr('transform', function () {
+          console.log(d.data.cx)
+          that.center.x = that.center.x + (2 * that.distance + that.between) * Math.cos((d.data.angle / 180) * Math.PI)
+          that.center.y = that.center.y + (2 * that.distance + that.between) * Math.sin((d.data.angle / 180) * Math.PI)
+
+          return `translate(${that.center.x}, ${that.center.y})`
+        })
+        .on('end', () => {
+          const transform = d3.zoomIdentity.translate(that.center.x, that.center.y).scale(1)
+          d3.select('svg').call(that.zoom.transform, transform)
+        })
     },
     drawRemove (node) {
       const that = this
@@ -268,6 +304,7 @@ export default {
       that.nodes.forEach((d, i) => {
         ind = i > 0 ? i - 1 : that.nodes.length
 
+        d.data.isParent = false
         d3.select('#circle-' + d.id)
           .transition()
           .delay(3 * ind * that.duration)
@@ -279,14 +316,15 @@ export default {
           .on('end', () => {
             d3.select('#circle-' + d.id).remove()
             if (i === 0) {
-              d.data.isParent = false
-              d.data.isClickable = false
               d._children = d.children
               d.children = null
-
+              d.isShown = true
               d.data.cx = d.data.sx
               d.data.cy = d.data.sy
               that.update(d, false, false)
+              if (d.parent.parent !== null) {
+                d3.select('#circle-' + d.parent.id).attr('class', 'isClickable')
+              }
             }
           })
 
@@ -294,10 +332,13 @@ export default {
           .transition()
           .delay(3 * ind * that.duration)
           .duration(6 * that.duration)
-          .attr('x1', (d) => (d.data.sx))
-          .attr('y1', (d) => (d.data.sy))
+          .attr('x1', (d, i) => (i === 0 ? d.parent.data.cx : d.data.sx))
+          .attr('y1', (d, i) => (i === 0 ? d.parent.data.cy : d.data.sy))
           .attr('x2', (d) => (d.data.sx))
           .attr('y2', (d) => (d.data.sy))
+          .on('end', () => {
+            d3.select('#line-' + d.id).remove()
+          })
 
         d3.select('#text-' + d.id)
           .transition()
@@ -311,12 +352,16 @@ export default {
               ? d.data.sy + delta : d.data.sy - delta
             return `translate(${x},${y})`
           })
+          .on('end', () => {
+            d3.select('#text-' + d.id).remove()
+          })
       })
     },
     drawLink (link) {
       const that = this
       const lineEnter = link.enter()
         .append('line')
+        .attr('id', d => ('line-' + d.id))
 
       lineEnter.transition()
         .delay((d, i) => (i * that.duration))
@@ -334,23 +379,26 @@ export default {
           return that.distance * Math.sin(angle)
         })
     },
-    drawMergedLink (link) {
+    drawMergedLink (link, isTrans) {
       const that = this
       const lineEnter = link.enter().append('line').attr('id', d => ('line-' + d.id))
       const lineUpdate = lineEnter.merge(link)
 
       lineUpdate
-        .attr('x1', (d) => (d.data.sx))
-        .attr('y1', (d) => (d.data.sy))
+        .attr('x1', (d, i) => (isTrans ? (i === 0 ? d.parent.data.cx : d.data.sx) : d.data.cx))
+        .attr('y1', (d, i) => (isTrans ? (i === 0 ? d.parent.data.cy : d.data.sy) : d.data.cy))
         .attr('x2', (d) => (d.data.sx))
         .attr('y2', (d) => (d.data.sy))
-        .transition()
-        .delay((d, i) => (3 * i * that.duration))
-        .duration(6 * that.duration)
-        .attr('x1', (d) => (d.data.sx))
-        .attr('y1', (d) => (d.data.sy))
-        .attr('x2', (d) => (d.data.cx))
-        .attr('y2', (d) => (d.data.cy))
+
+      if (isTrans) {
+        lineUpdate.transition()
+          .delay((d, i) => (3 * i * that.duration))
+          .duration(6 * that.duration)
+          .attr('x1', (d, i) => (i === 0 ? d.parent.data.cx : d.data.sx))
+          .attr('y1', (d, i) => (i === 0 ? d.parent.data.cy : d.data.sy))
+          .attr('x2', (d) => (d.data.cx))
+          .attr('y2', (d) => (d.data.cy))
+      }
     },
     drawText (text) {
       const that = this
@@ -376,7 +424,7 @@ export default {
           }
         })
     },
-    drawMergedText (text) {
+    drawMergedText (text, isTrans) {
       const that = this
       const textEnter = text.enter().append('text')
         .attr('id', d => ('text-' + d.id))
@@ -384,25 +432,28 @@ export default {
       const textUpdate = textEnter.merge(text)
 
       textUpdate
+        .style('opacity', (d) => (d.isShown || !isTrans ? 1 : 0))
         .attr('transform', function (d) {
           const delta = that.childRadius + 20
-          const x = d.data.sx
-          const y = d.data.sy > 0
-            ? d.data.sy + delta : d.data.sy - delta
+          const x = isTrans ? d.data.sx : d.data.cx
+          const y = isTrans ? (d.data.sy > 0 ? d.data.sy + delta : d.data.sy - delta)
+            : (d.data.cy > 0 ? d.data.cy + delta : d.data.cy - delta)
           return `translate(${x},${y})`
         })
-        .style('opacity', (d) => (d.isShown ? 1 : 0))
-        .transition()
-        .delay((d, i) => (3 * i * that.duration))
-        .duration(6 * that.duration)
-        .style('opacity', 1)
-        .attr('transform', function (d) {
-          const delta = (d.data.isParent ? that.parentRadius : that.childRadius) + 20
-          const x = d.data.cx
-          const y = d.data.cy > 0
-            ? d.data.cy + delta : d.data.cy - delta
-          return `translate(${x},${y})`
-        })
+
+      if (isTrans) {
+        textUpdate.transition()
+          .delay((d, i) => (3 * i * that.duration))
+          .duration(6 * that.duration)
+          .style('opacity', 1)
+          .attr('transform', function (d) {
+            const delta = (d.data.isParent ? that.parentRadius : that.childRadius) + 20
+            const x = d.data.cx
+            const y = d.data.cy > 0
+              ? d.data.cy + delta : d.data.cy - delta
+            return `translate(${x},${y})`
+          })
+      }
     }
   }
 }
@@ -455,5 +506,10 @@ line {
 text {
   text-anchor: middle;
   opacity: 0;
+}
+
+.isClickable {
+  cursor: pointer;
+  fill: blue
 }
 </style>
