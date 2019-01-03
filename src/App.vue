@@ -25,155 +25,40 @@ export default {
   data: () => ({
     treeData: {
       name: 'Science',
-      angle: null,
-      cx: 0,
-      cy: 0,
-      isParent: true,
       hasChild: true,
       children: [
         {
           name: 'Physics',
-          angle: null,
-          cx: 0,
-          cy: 0,
-          isParent: false,
           hasChild: true,
           children: [
             {
               name: 'Linear Motion 1',
-              angle: null,
-              cx: 0,
-              cy: 0,
-              isParent: false,
               hasChild: true,
               children: [
                 {
                   name: 'motion',
-                  angle: null,
-                  cx: 0,
-                  cy: 0,
-                  isParent: false,
                   hasChild: true,
-                  children: [
-                    {
-                      name: 'color1',
-                      angle: null,
-                      cx: 0,
-                      cy: 0,
-                      isParent: false,
-                      hasChild: false
-                    }
-                  ]
+                  children: [{ name: 'color1', hasChild: false }]
                 },
                 {
                   name: 'SUB-CATEGORY',
-                  angle: null,
-                  cx: 0,
-                  cy: 0,
-                  isParent: false,
                   hasChild: true,
-                  children: [
-                    {
-                      name: 'color',
-                      angle: null,
-                      cx: 0,
-                      cy: 0,
-                      isParent: false,
-                      hasChild: false
-                    }
-                  ]
+                  children: [{ name: 'color', hasChild: false }]
                 }]
             },
-            {
-              name: 'Linear motion 2',
-              angle: null,
-              cx: 0,
-              cy: 0,
-              isParent: false,
-              hasChild: false
-            },
-            {
-              name: 'Linear motion 3',
-              angle: null,
-              cx: 0,
-              cy: 0,
-              isParent: false,
-              hasChild: false
-            }
+            { name: 'Linear motion 2', hasChild: false },
+            { name: 'Linear motion 3', hasChild: false }
           ]
         },
-        {
-          name: 'Chemistry',
-          angle: null,
-          cx: 0,
-          cy: 0,
-          isParent: false,
-          hasChild: false
-        },
-        {
-          name: 'Physical Science',
-          angle: null,
-          cx: 0,
-          cy: 0,
-          isParent: false,
-          hasChild: false
-        },
-        {
-          name: 'Biology',
-          angle: null,
-          cx: 0,
-          cy: 0,
-          isParent: false,
-          hasChild: false
-        },
-        {
-          name: 'Anatomy',
-          angle: null,
-          cx: 0,
-          cy: 0,
-          isParent: false,
-          hasChild: false
-        },
-        {
-          name: 'Physiology',
-          angle: null,
-          cx: 0,
-          cy: 0,
-          isParent: false,
-          hasChild: false
-        },
-        {
-          name: 'Zoology',
-          angle: null,
-          cx: 0,
-          cy: 0,
-          isParent: false,
-          hasChild: false
-        },
-        {
-          name: 'Science',
-          angle: null,
-          cx: 0,
-          cy: 0,
-          isParent: false,
-          hasChild: false
-        },
-        {
-          name: 'Physics - Intermediate',
-          angle: null,
-          cx: 0,
-          cy: 0,
-          isParent: false,
-          hasChild: false
-        },
-        {
-          name: 'Biology',
-          angle: null,
-          cx: 0,
-          cy: 0,
-          isParent: false,
-          hasChild: false
-        }
+        { name: 'Chemistry', hasChild: false },
+        { name: 'Physical Science', hasChild: false },
+        { name: 'Biology', hasChild: false },
+        { name: 'Anatomy', hasChild: false },
+        { name: 'Physiology', hasChild: false },
+        { name: 'Zoology', hasChild: false },
+        { name: 'Science', hasChild: false },
+        { name: 'Physics - Intermediate', hasChild: false },
+        { name: 'Biology', hasChild: false }
       ]
     }
   })
