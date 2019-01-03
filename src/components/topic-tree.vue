@@ -258,12 +258,14 @@ export default {
 
         this.update()
         this.collapse(d)
+        this.moveCenter(d.parent)
       } else {
         d.children = d._children
         d._children = null
 
         d.isParent = true
         this.expand(d)
+        this.moveCenter(d)
       }
     },
     expand (node) {
@@ -416,6 +418,20 @@ export default {
             .style('opacity', 1)
         })
       }
+    },
+    moveCenter (d) {
+      const that = this
+      // Move the diagram
+      d3.select('.content')
+        .transition()
+        .duration(3 * that.duration)
+        .attr('transform', function () {
+          return `translate(${that.center.x - d.cx}, ${that.center.y - d.cy})`
+        })
+        .on('end', () => {
+          const transform = d3.zoomIdentity.translate(that.center.x - d.cx, that.center.y - d.cy).scale(1)
+          d3.select('svg').call(that.zoom.transform, transform)
+        })
     }
   }
 }
