@@ -6,7 +6,7 @@
       <p> {{title}} </p>
       <i class="material-icons" @click="closePopup">close</i>
     </div>
-    <div class="hover">Explored</div>
+    <div class="hover"></div>
   </div>
 </template>
 
@@ -187,6 +187,7 @@ export default {
             d3.select('#group-' + d.id).selectAll('text').style('cursor', 'default')
             return false
           } else {
+            if (!d.data.hasChild) return false
             d3.select('#group-' + d.id).selectAll('circle').style('cursor', 'pointer')
             d3.select('#group-' + d.id).selectAll('text').style('cursor', 'pointer')
           }
