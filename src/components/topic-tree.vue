@@ -191,23 +191,22 @@ export default {
             d3.select('#group-' + d.id).selectAll('text').style('cursor', 'pointer')
           }
 
-          d3.select('.hover').style('display', 'block')
-          d3.select('.hover').transition()
-            .duration(200)
-            .style('opacity', 0.9)
-          d3.select('.hover').html(function (v) {
-            if (d.data.hasChild && d.isParent) {
-              return 'Collapse'
-            } else {
-              return 'Explored'
-            }
-          })
+          d3.select('.hover')
+            .html(() => {
+              if (d.data.hasChild && d.isParent) {
+                return 'Collapse'
+              } else {
+                return 'Explore'
+              }
+            })
+            .style('display', 'block')
             .style('left', (d3.event.pageX + 10) + 'px')
             .style('top', (d3.event.pageY + 10) + 'px')
         })
-        .on('mouseout', d => {
+        .on('mouseout', () => {
           d3.select('.hover').style('display', 'none')
         })
+
       nodeEnter.append('text')
         .html(d => d.data.name)
         .attr('y', (d) => ((d.parent) ? 40 : 60))
@@ -217,9 +216,6 @@ export default {
             that.title = d.data.name
           }
         })
-
-      nodeEnter.append('g').attr('class', 'text').append('text')
-        .html(d => d.name)
 
       nodeEnter
         .transition()
